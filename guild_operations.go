@@ -137,8 +137,14 @@ func (c *ServerCloner) copyChannels(source, target *discordgo.Guild) error {
 			channelCreate := &discordgo.GuildChannelCreateData{
 				Name:                 channel.Name,
 				Type:                 channel.Type,
-				PermissionOverwrites: permissionOverwrites,
+				Topic:                channel.Topic,
+				Bitrate:              channel.Bitrate,
+				UserLimit:            channel.UserLimit,
+				RateLimitPerUser:     channel.RateLimitPerUser,
 				Position:             channel.Position,
+				PermissionOverwrites: permissionOverwrites,
+				ParentID:             "",
+				NSFW:                 channel.NSFW,
 			}
 
 			created, err := c.session.GuildChannelCreateComplex(target.ID, *channelCreate)
@@ -213,7 +219,7 @@ func (c *ServerCloner) deleteAllChannels(guild *discordgo.Guild) error {
 	// Получаем актуальный список каналов
 	channels, err := c.session.GuildChannels(guild.ID)
 	if err != nil {
-		return fmt.Errorf("ошибка получения каналов: %w", err)
+		return fmt.Errorf("ошибка полчения каналов: %w", err)
 	}
 
 	// Сначала удаляем все каналы, кроме категорий
@@ -240,5 +246,49 @@ func (c *ServerCloner) deleteAllChannels(guild *discordgo.Guild) error {
 		}
 	}
 
+	return nil
+}
+
+func (c *ServerCloner) copyEmojisAndStickers(source, target *discordgo.Guild) error {
+	// Копируем эмодзи
+	emojis, err := c.session.GuildEmojis(source.ID)
+	if err != nil {
+		return fmt.Errorf("ошибка получения эмодзи: %w", err)
+	}
+
+	for _, emoji := range emojis {
+		// Используем правильный метод для получения URL эмодзи
+		emojiURL := fmt.Sprintf("https://cdn.discordapp.com/emojis/%s.png", emoji.ID)
+		resp, err := http.Get(emojiURL)
+		if err != nil {
+			fmt.Printf("[!] Ошибка при скачивании эмодзи %s: %v\n", emoji.Name, err)
+			continue
+		}
+		defer resp.Body.Close()
+
+		emojiData, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			fmt.Printf("[!] Ошибка при чтении эмодзи %s: %v\n", emoji.Name, err)
+			continue
+		}
+
+		// Создаем новый эмодзи
+		emojiParams := &discordgo.EmojiParams{
+			Name:  emoji.Name,
+			Image: "data:image/png;base64," + base64.StdEncoding.EncodeToString(emojiData),
+		}
+
+		_, err = c.session.GuildEmojiCreate(target.ID, emojiParams)
+		if err != nil {
+			fmt.Printf("[!] Ошибка при создании эмодзи %s: %v\n", emoji.Name, err)
+			continue
+		}
+
+		c.stats.Emojis++
+		fmt.Printf("[+] Создан эмодзи: %s\n", emoji.Name)
+	}
+
+	// Временно отключим копирование стикеров
+	fmt.Println("[!] Копирование стикеров временно не поддерживается")
 	return nil
 }

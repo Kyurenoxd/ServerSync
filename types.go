@@ -5,6 +5,7 @@ type CloneStats struct {
 	Categories    int
 	TextChannels  int
 	VoiceChannels int
+	Emojis        int
 }
 
 type Guild struct {

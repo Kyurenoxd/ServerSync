@@ -1,0 +1,30 @@
+# Бинарные файлы
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Тестовые файлы
+*.test
+
+# Файлы профилирования
+*.prof
+
+# Файлы IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Временные файлы
+tmp/
+temp/
+
+# Файлы конфигурации
+*.env
+config.json
+
+# Скомпилированные файлы
+serversync
+serversync.exe 

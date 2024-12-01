@@ -71,6 +71,11 @@ func (c *ServerCloner) CloneServer(sourceID, targetID string) error {
 		return err
 	}
 
+	fmt.Println("\n[+] Копирование эмодзи и стикеров...")
+	if err := c.copyEmojisAndStickers(sourceGuild, targetGuild); err != nil {
+		return err
+	}
+
 	c.printStats()
 	return nil
 }
@@ -81,5 +86,6 @@ func (c *ServerCloner) printStats() {
 	fmt.Printf("[+] Создано категорий: %d\n", c.stats.Categories)
 	fmt.Printf("[+] Создано текстовых каналов: %d\n", c.stats.TextChannels)
 	fmt.Printf("[+] Создано голосовых каналов: %d\n", c.stats.VoiceChannels)
+	fmt.Printf("[+] Скопировано эмодзи: %d\n", c.stats.Emojis)
 	fmt.Println("==============================")
 }
